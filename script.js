@@ -18,16 +18,37 @@ openInvite.addEventListener("click", () => {
 
 
 // ===================================
-// 2. MUSIC BUTTON - SOFT BY LANY
+// 2. MUSIC PLAYER - SOFT BY LANY
 // ===================================
 
 const musicFab = document.getElementById("musicFab");
+const birthdayAudio = document.getElementById("birthdayAudio");
 
-musicFab.addEventListener("click", () => {
-  const spotifyURL =
-    "https://open.spotify.com/search/Soft%20LANY";
+musicFab.addEventListener("click", async () => {
+  if (birthdayAudio.paused) {
+    try {
+      await birthdayAudio.play();
 
-  window.open(spotifyURL, "_blank");
+      musicFab.textContent = "♫";
+      musicFab.classList.add("playing");
+      musicFab.setAttribute("aria-label", "Pause music");
+
+    } catch (error) {
+      alert("Musik belum bisa diputar. Silakan coba lagi.");
+    }
+
+  } else {
+    birthdayAudio.pause();
+
+    musicFab.textContent = "♫";
+    musicFab.classList.remove("playing");
+    musicFab.setAttribute("aria-label", "Play music");
+  }
+});
+
+birthdayAudio.addEventListener("ended", () => {
+  musicFab.classList.remove("playing");
+  musicFab.setAttribute("aria-label", "Play music");
 });
 
 
@@ -73,7 +94,6 @@ document.getElementById("micButton")
       window.AudioContext || window.webkitAudioContext;
 
     const context = new AudioContextClass();
-
     const source = context.createMediaStreamSource(stream);
     const analyser = context.createAnalyser();
 
@@ -141,8 +161,6 @@ const declineButton =
 
 function moveDeclineButton() {
 
-  const parent = declineButton.parentElement;
-
   const maxX = 180;
   const maxY = 100;
 
@@ -188,7 +206,6 @@ document.getElementById("rsvpForm")
   const count =
     document.getElementById("guestCount").value;
 
-  // Nomor WhatsApp RSVP
   const whatsappNumber = "6285231677007";
 
   if (!name) {

@@ -1,223 +1,315 @@
 
-// ===================================
-// 1. OPEN INVITATION
-// ===================================
+document.addEventListener("DOMContentLoaded", () => {
 
-const openInvite = document.getElementById("openInvite");
-const invitation = document.getElementById("invitation");
+  // =====================================
+  // 1. OPEN INVITATION
+  // =====================================
 
-openInvite.addEventListener("click", () => {
-  invitation.hidden = false;
+  const openInvite = document.getElementById("openInvite");
+  const invitation = document.getElementById("invitation");
+  const cover = document.getElementById("cover");
 
-  document.getElementById("cover").style.display = "none";
+  if (openInvite && invitation && cover) {
+    openInvite.addEventListener("click", () => {
+      invitation.hidden = false;
+      cover.style.display = "none";
 
-  document.getElementById("welcome").scrollIntoView({
-    behavior: "smooth"
-  });
-});
+      document.getElementById("welcome")?.scrollIntoView({
+        behavior: "smooth"
+      });
+    });
+  }
 
 
-// ===================================
-// 2. MUSIC PLAYER - SOFT BY LANY
-// ===================================
+  // =====================================
+  // 2. MUSIC PLAYER - LANY
+  // =====================================
 
-const musicFab = document.getElementById("musicFab");
-const birthdayAudio = document.getElementById("birthdayAudio");
+  const musicButton = document.getElementById("musicFab");
 
-musicFab.addEventListener("click", async () => {
-  if (birthdayAudio.paused) {
-    try {
-      await birthdayAudio.play();
+  let audio = document.getElementById("birthdayAudio");
 
-      musicFab.textContent = "♫";
-      musicFab.classList.add("playing");
-      musicFab.setAttribute("aria-label", "Pause music");
+  // Create audio element if it does not exist
+  if (!audio) {
+    audio = document.createElement("audio");
+    audio.id = "birthdayAudio";
+    document.body.appendChild(audio);
+  }
 
-    } catch (error) {
-      alert("Musik belum bisa diputar. Silakan coba lagi.");
+  // Set MP3 location
+  audio.src = new URL(
+    "assets/soft-lany.mp3",
+    document.baseURI
+  ).href;
+
+  audio.type = "audio/mpeg";
+  audio.loop = true;
+  audio.preload = "auto";
+  audio.volume = 0.8;
+
+  audio.load();
+
+  if (musicButton) {
+
+    musicButton.textContent = "♫";
+    musicButton.setAttribute("aria-label", "Play music");
+
+    musicButton.addEventListener("click", async () => {
+
+      if (audio.paused) {
+
+        try {
+          await audio.play();
+
+          musicButton.classList.add("playing");
+          musicButton.setAttribute("aria-label", "Pause music");
+
+        } catch (error) {
+
+          console.error("Music playback error:", error);
+
+          alert(
+            "Musik belum bisa diputar. Pastikan file soft-lany.mp3 sudah ter-upload dengan benar."
+          );
+
+        }
+
+      } else {
+
+        audio.pause();
+
+        musicButton.classList.remove("playing");
+        musicButton.setAttribute("aria-label", "Play music");
+
+      }
+
+    });
+
+    audio.addEventListener("play", () => {
+      musicButton.classList.add("playing");
+    });
+
+    audio.addEventListener("pause", () => {
+      musicButton.classList.remove("playing");
+    });
+
+  }
+
+
+  // =====================================
+  // 3. BLOW THE CANDLES
+  // =====================================
+
+  const blowButton = document.getElementById("blowButton");
+  const flames = document.getElementById("flames");
+  const cakeFeedback = document.getElementById("cakeFeedback");
+
+  function blowCandles() {
+
+    if (flames) {
+      flames.classList.add("off");
     }
 
-  } else {
-    birthdayAudio.pause();
+    if (cakeFeedback) {
+      cakeFeedback.textContent =
+        "Yeay! Happy Birthday, Mysha! Make a wish! ♡";
+    }
 
-    musicFab.textContent = "♫";
-    musicFab.classList.remove("playing");
-    musicFab.setAttribute("aria-label", "Play music");
-  }
-});
-
-birthdayAudio.addEventListener("ended", () => {
-  musicFab.classList.remove("playing");
-  musicFab.setAttribute("aria-label", "Play music");
-});
-
-
-// ===================================
-// 3. BLOW THE CANDLES
-// ===================================
-
-function blowCandles() {
-  const flames = document.getElementById("flames");
-  const feedback = document.getElementById("cakeFeedback");
-
-  if (flames.classList.contains("off")) return;
-
-  flames.classList.add("off");
-
-  feedback.textContent =
-    "Yeay! Happy Birthday, Mysha! Make a wish! ✨";
-
-  document.getElementById("blowButton").textContent =
-    "♡ Lilin sudah ditiup!";
-}
-
-document.getElementById("blowButton")
-  .addEventListener("click", blowCandles);
-
-
-// ===================================
-// 4. MICROPHONE BLOW
-// ===================================
-
-document.getElementById("micButton")
-  .addEventListener("click", async () => {
-
-  const feedback = document.getElementById("cakeFeedback");
-
-  try {
-    const stream =
-      await navigator.mediaDevices.getUserMedia({
-        audio: true
-      });
-
-    const AudioContextClass =
-      window.AudioContext || window.webkitAudioContext;
-
-    const context = new AudioContextClass();
-    const source = context.createMediaStreamSource(stream);
-    const analyser = context.createAnalyser();
-
-    analyser.fftSize = 256;
-    source.connect(analyser);
-
-    const data = new Uint8Array(analyser.frequencyBinCount);
-
-    feedback.textContent = "Tiup sekarang ke mikrofon! 🎤";
-
-    let hits = 0;
-    let elapsed = 0;
-
-    const timer = setInterval(() => {
-
-      analyser.getByteFrequencyData(data);
-
-      const volume =
-        data.reduce((a, b) => a + b, 0) / data.length;
-
-      if (volume > 30) {
-        hits++;
-      } else {
-        hits = 0;
-      }
-
-      elapsed++;
-
-      if (hits >= 3) {
-        clearInterval(timer);
-
-        stream.getTracks().forEach(track => track.stop());
-        context.close();
-
-        blowCandles();
-      }
-
-      if (elapsed >= 80) {
-        clearInterval(timer);
-
-        stream.getTracks().forEach(track => track.stop());
-        context.close();
-
-        feedback.textContent =
-          "Belum terdeteksi. Coba lagi atau tekan Tiup Lilin!";
-      }
-
-    }, 150);
-
-  } catch (error) {
-
-    feedback.textContent =
-      "Aktifkan izin mikrofon atau gunakan tombol Tiup Lilin!";
+    if (blowButton) {
+      blowButton.textContent = "♡ Lilin sudah ditiup!";
+    }
 
   }
-});
 
-
-// ===================================
-// 5. RUNNING DECLINE BUTTON
-// ===================================
-
-const declineButton =
-  document.getElementById("declineButton");
-
-function moveDeclineButton() {
-
-  const maxX = 180;
-  const maxY = 100;
-
-  const x = Math.random() * maxX - maxX / 2;
-  const y = Math.random() * maxY - maxY / 2;
-
-  declineButton.style.transform =
-    `translate(${x}px, ${y}px)`;
-}
-
-declineButton.addEventListener(
-  "mouseenter",
-  moveDeclineButton
-);
-
-declineButton.addEventListener(
-  "touchstart",
-  (event) => {
-    event.preventDefault();
-    moveDeclineButton();
-  },
-  { passive: false }
-);
-
-declineButton.addEventListener("click", (event) => {
-  event.preventDefault();
-  moveDeclineButton();
-});
-
-
-// ===================================
-// 6. RSVP VIA WHATSAPP
-// ===================================
-
-document.getElementById("rsvpForm")
-  .addEventListener("submit", (event) => {
-
-  event.preventDefault();
-
-  const name =
-    document.getElementById("guestName").value.trim();
-
-  const count =
-    document.getElementById("guestCount").value;
-
-  const whatsappNumber = "6285231677007";
-
-  if (!name) {
-    alert("Masukkan nama terlebih dahulu!");
-    return;
+  if (blowButton) {
+    blowButton.addEventListener("click", blowCandles);
   }
 
-  const message =
-    `Halo! Aku ${name}, konfirmasi hadir di ulang tahun Mysha tanggal 7 November 2026. Jumlah: ${count} orang.`;
 
-  const whatsappURL =
-    `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+  // =====================================
+  // 4. MICROPHONE BLOW
+  // =====================================
 
-  window.open(whatsappURL, "_blank");
+  const micButton = document.getElementById("micButton");
+
+  if (micButton) {
+
+    micButton.addEventListener("click", async () => {
+
+      if (!navigator.mediaDevices?.getUserMedia) {
+        if (cakeFeedback) {
+          cakeFeedback.textContent =
+            "Mikrofon tidak tersedia. Gunakan tombol Tiup Lilin!";
+        }
+        return;
+      }
+
+      let stream;
+      let context;
+      let timer;
+
+      try {
+
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: true
+        });
+
+        const AudioContextClass =
+          window.AudioContext || window.webkitAudioContext;
+
+        context = new AudioContextClass();
+
+        const source = context.createMediaStreamSource(stream);
+        const analyser = context.createAnalyser();
+
+        analyser.fftSize = 256;
+        source.connect(analyser);
+
+        const data = new Uint8Array(
+          analyser.frequencyBinCount
+        );
+
+        if (cakeFeedback) {
+          cakeFeedback.textContent =
+            "Tiup sekarang ke mikrofon! 🎤";
+        }
+
+        let hits = 0;
+        let elapsed = 0;
+
+        timer = setInterval(() => {
+
+          analyser.getByteFrequencyData(data);
+
+          const volume =
+            data.reduce((a, b) => a + b, 0) / data.length;
+
+          hits = volume > 30 ? hits + 1 : 0;
+          elapsed++;
+
+          if (hits >= 3) {
+
+            clearInterval(timer);
+            stream.getTracks().forEach(track => track.stop());
+            context.close();
+
+            blowCandles();
+
+          }
+
+          if (elapsed >= 80) {
+
+            clearInterval(timer);
+            stream.getTracks().forEach(track => track.stop());
+            context.close();
+
+            if (cakeFeedback) {
+              cakeFeedback.textContent =
+                "Belum terdeteksi. Coba lagi atau tekan Tiup Lilin!";
+            }
+
+          }
+
+        }, 150);
+
+      } catch (error) {
+
+        if (timer) clearInterval(timer);
+
+        if (stream) {
+          stream.getTracks().forEach(track => track.stop());
+        }
+
+        if (context) context.close();
+
+        if (cakeFeedback) {
+          cakeFeedback.textContent =
+            "Izinkan akses mikrofon atau gunakan tombol Tiup Lilin!";
+        }
+
+      }
+
+    });
+
+  }
+
+
+  // =====================================
+  // 5. RUNNING DECLINE BUTTON
+  // =====================================
+
+  const declineButton =
+    document.getElementById("declineButton");
+
+  if (declineButton) {
+
+    function moveDeclineButton() {
+
+      const x = Math.random() * 180 - 90;
+      const y = Math.random() * 100 - 50;
+
+      declineButton.style.transform =
+        `translate(${x}px, ${y}px)`;
+
+    }
+
+    declineButton.addEventListener(
+      "mouseenter",
+      moveDeclineButton
+    );
+
+    declineButton.addEventListener(
+      "touchstart",
+      (event) => {
+        event.preventDefault();
+        moveDeclineButton();
+      },
+      { passive: false }
+    );
+
+    declineButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      moveDeclineButton();
+    });
+
+  }
+
+
+  // =====================================
+  // 6. RSVP VIA WHATSAPP
+  // =====================================
+
+  const rsvpForm = document.getElementById("rsvpForm");
+
+  if (rsvpForm) {
+
+    rsvpForm.addEventListener("submit", (event) => {
+
+      event.preventDefault();
+
+      const name =
+        document.getElementById("guestName")?.value.trim();
+
+      const count =
+        document.getElementById("guestCount")?.value;
+
+      const whatsappNumber = "6285231677007";
+
+      if (!name) {
+        alert("Masukkan nama terlebih dahulu!");
+        return;
+      }
+
+      const message =
+        `Halo! Aku ${name}, konfirmasi hadir di ulang tahun Mysha tanggal 7 November 2026. Jumlah: ${count} orang.`;
+
+      const whatsappURL =
+        `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+
+      window.open(whatsappURL, "_blank");
+
+    });
+
+  }
+
 });

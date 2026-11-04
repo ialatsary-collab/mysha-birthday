@@ -22,42 +22,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // =====================================
-  // 2. MUSIC PLAYER - LANY
+  // 2. MUSIC PLAYER - SOFT BY LANY
   // =====================================
 
   const musicButton = document.getElementById("musicFab");
+  const audio = document.getElementById("birthdayAudio");
 
-  let audio = document.getElementById("birthdayAudio");
+  if (musicButton && audio) {
 
-  // Create audio element if it does not exist
-  if (!audio) {
-    audio = document.createElement("audio");
-    audio.id = "birthdayAudio";
-    document.body.appendChild(audio);
-  }
-
-  // Set MP3 location
-  audio.src = new URL(
-    "assets/soft-lany.mp3",
-    document.baseURI
-  ).href;
-
-  audio.type = "audio/mpeg";
-  audio.loop = true;
-  audio.preload = "auto";
-  audio.volume = 0.8;
-
-  audio.load();
-
-  if (musicButton) {
-
-    musicButton.textContent = "♫";
-    musicButton.setAttribute("aria-label", "Play music");
+    audio.src = "assets/soft-lany.mp3";
+    audio.loop = true;
+    audio.volume = 0.8;
 
     musicButton.addEventListener("click", async () => {
 
       if (audio.paused) {
-
         try {
           await audio.play();
 
@@ -65,32 +44,25 @@ document.addEventListener("DOMContentLoaded", () => {
           musicButton.setAttribute("aria-label", "Pause music");
 
         } catch (error) {
-
-          console.error("Music playback error:", error);
-
-          alert(
-            "Musik belum bisa diputar. Pastikan file soft-lany.mp3 sudah ter-upload dengan benar."
-          );
-
+          console.error("Audio error:", error);
+          alert("Musik gagal diputar. Periksa file MP3 kamu.");
         }
 
       } else {
-
         audio.pause();
 
         musicButton.classList.remove("playing");
         musicButton.setAttribute("aria-label", "Play music");
-
       }
 
     });
 
-    audio.addEventListener("play", () => {
-      musicButton.classList.add("playing");
-    });
-
     audio.addEventListener("pause", () => {
       musicButton.classList.remove("playing");
+    });
+
+    audio.addEventListener("play", () => {
+      musicButton.classList.add("playing");
     });
 
   }
@@ -127,7 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // =====================================
-  // 4. MICROPHONE BLOW
+  // 4. BLOW CANDLES USING MICROPHONE
   // =====================================
 
   const micButton = document.getElementById("micButton");
@@ -136,19 +108,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     micButton.addEventListener("click", async () => {
 
-      if (!navigator.mediaDevices?.getUserMedia) {
-        if (cakeFeedback) {
-          cakeFeedback.textContent =
-            "Mikrofon tidak tersedia. Gunakan tombol Tiup Lilin!";
-        }
-        return;
-      }
-
       let stream;
       let context;
       let timer;
 
       try {
+
+        if (!navigator.mediaDevices?.getUserMedia) {
+          throw new Error("Microphone not supported");
+        }
 
         stream = await navigator.mediaDevices.getUserMedia({
           audio: true
@@ -165,9 +133,7 @@ document.addEventListener("DOMContentLoaded", () => {
         analyser.fftSize = 256;
         source.connect(analyser);
 
-        const data = new Uint8Array(
-          analyser.frequencyBinCount
-        );
+        const data = new Uint8Array(analyser.frequencyBinCount);
 
         if (cakeFeedback) {
           cakeFeedback.textContent =
@@ -195,9 +161,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             blowCandles();
 
-          }
-
-          if (elapsed >= 80) {
+          } else if (elapsed >= 80) {
 
             clearInterval(timer);
             stream.getTracks().forEach(track => track.stop());
@@ -287,21 +251,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       event.preventDefault();
 
-      const name =
-        document.getElementById("guestName")?.value.trim();
-
-      const count =
-        document.getElementById("guestCount")?.value;
-
       const whatsappNumber = "6285231677007";
-
-      if (!name) {
-        alert("Masukkan nama terlebih dahulu!");
-        return;
-      }
-
-      const message =
-        `Halo! Aku ${name}, konfirmasi hadir di ulang tahun Mysha tanggal 7 November 2026. Jumlah: ${count} orang.`;
+      const message = "hai ganteng gue dateng ya";
 
       const whatsappURL =
         `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;

@@ -1,76 +1,115 @@
 
+// =============================================
+// MYSHA'S BIRTHDAY SCRAPBOOK
+// =============================================
+
 document.addEventListener("DOMContentLoaded", () => {
 
-  // =====================================
-  // 1. OPEN INVITATION
-  // =====================================
+  // =============================================
+  // 1. MUSIC PLAYER SETUP
+  // =============================================
+
+  const musicButton = document.getElementById("musicFab");
+  const audio = document.getElementById("birthdayAudio");
+
+  if (audio) {
+    audio.src = "assets/soft-lany.mp3";
+    audio.loop = true;
+    audio.volume = 0.8;
+    audio.preload = "auto";
+  }
+
+  // Function to play music
+  async function playBirthdayMusic() {
+    if (!audio) return;
+
+    try {
+      await audio.play();
+
+      if (musicButton) {
+        musicButton.classList.add("playing");
+        musicButton.setAttribute("aria-label", "Pause music");
+      }
+
+    } catch (error) {
+      console.error("Music playback failed:", error);
+
+      alert(
+        "Musik belum bisa diputar. Silakan tekan tombol musik ♫."
+      );
+    }
+  }
+
+  // Function to pause music
+  function pauseBirthdayMusic() {
+    if (!audio) return;
+
+    audio.pause();
+
+    if (musicButton) {
+      musicButton.classList.remove("playing");
+      musicButton.setAttribute("aria-label", "Play music");
+    }
+  }
+
+
+  // =============================================
+  // 2. OPEN INVITATION + AUTO PLAY MUSIC
+  // =============================================
 
   const openInvite = document.getElementById("openInvite");
   const invitation = document.getElementById("invitation");
   const cover = document.getElementById("cover");
 
   if (openInvite && invitation && cover) {
-    openInvite.addEventListener("click", () => {
+
+    openInvite.addEventListener("click", async () => {
+
       invitation.hidden = false;
       cover.style.display = "none";
+
+      // Play music when invitation is opened
+      await playBirthdayMusic();
 
       document.getElementById("welcome")?.scrollIntoView({
         behavior: "smooth"
       });
+
     });
+
   }
 
 
-  // =====================================
-  // 2. MUSIC PLAYER - SOFT BY LANY
-  // =====================================
-
-  const musicButton = document.getElementById("musicFab");
-  const audio = document.getElementById("birthdayAudio");
+  // =============================================
+  // 3. MUSIC BUTTON PLAY / PAUSE
+  // =============================================
 
   if (musicButton && audio) {
-
-    audio.src = "assets/soft-lany.mp3";
-    audio.loop = true;
-    audio.volume = 0.8;
 
     musicButton.addEventListener("click", async () => {
 
       if (audio.paused) {
-        try {
-          await audio.play();
-
-          musicButton.classList.add("playing");
-          musicButton.setAttribute("aria-label", "Pause music");
-
-        } catch (error) {
-          console.error("Audio error:", error);
-          alert("Musik gagal diputar. Periksa file MP3 kamu.");
-        }
-
+        await playBirthdayMusic();
       } else {
-        audio.pause();
-
-        musicButton.classList.remove("playing");
-        musicButton.setAttribute("aria-label", "Play music");
+        pauseBirthdayMusic();
       }
 
-    });
-
-    audio.addEventListener("pause", () => {
-      musicButton.classList.remove("playing");
     });
 
     audio.addEventListener("play", () => {
       musicButton.classList.add("playing");
     });
 
+    audio.addEventListener("pause", () => {
+      musicButton.classList.remove("playing");
+    });
+
   }
 
 
-  // =====================================
-  // 3. BLOW THE CANDLES
-  // =====================================
+  // =============================================
+  // 4. BLOW THE CANDLES
+  // =============================================
 
   const blowButton = document.getElementById("blowButton");
   const flames = document.getElementById("flames");
@@ -98,9 +137,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 
-  // =====================================
-  // 4. BLOW CANDLES USING MICROPHONE
-  // =====================================
+  // =============================================
+  // 5. BLOW CANDLES USING MICROPHONE
+  // =============================================
 
   const micButton = document.getElementById("micButton");
 
@@ -115,7 +154,7 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
 
         if (!navigator.mediaDevices?.getUserMedia) {
-          throw new Error("Microphone not supported");
+          throw new Error("Microphone unavailable");
         }
 
         stream = await navigator.mediaDevices.getUserMedia({
@@ -133,7 +172,9 @@ document.addEventListener("DOMContentLoaded", () => {
         analyser.fftSize = 256;
         source.connect(analyser);
 
-        const data = new Uint8Array(analyser.frequencyBinCount);
+        const data = new Uint8Array(
+          analyser.frequencyBinCount
+        );
 
         if (cakeFeedback) {
           cakeFeedback.textContent =
@@ -142,6 +183,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
         let hits = 0;
         let elapsed = 0;
+
+        function cleanup() {
+          if (timer) clearInterval(timer);
+
+          if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+          }
+
+          if (context && context.state !== "closed") {
+            context.close();
+          }
+        }
 
         timer = setInterval(() => {
 
@@ -155,17 +208,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
           if (hits >= 3) {
 
-            clearInterval(timer);
-            stream.getTracks().forEach(track => track.stop());
-            context.close();
-
+            cleanup();
             blowCandles();
 
           } else if (elapsed >= 80) {
 
-            clearInterval(timer);
-            stream.getTracks().forEach(track => track.stop());
-            context.close();
+            cleanup();
 
             if (cakeFeedback) {
               cakeFeedback.textContent =
@@ -184,7 +232,9 @@ document.addEventListener("DOMContentLoaded", () => {
           stream.getTracks().forEach(track => track.stop());
         }
 
-        if (context) context.close();
+        if (context && context.state !== "closed") {
+          context.close();
+        }
 
         if (cakeFeedback) {
           cakeFeedback.textContent =
@@ -198,9 +248,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 
-  // =====================================
-  // 5. RUNNING DECLINE BUTTON
-  // =====================================
+  // =============================================
+  // 6. RUNNING DECLINE BUTTON
+  // =============================================
 
   const declineButton =
     document.getElementById("declineButton");
@@ -239,9 +289,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 
-  // =====================================
-  // 6. RSVP VIA WHATSAPP
-  // =====================================
+  // =============================================
+  // 7. RSVP VIA WHATSAPP
+  // =============================================
 
   const rsvpForm = document.getElementById("rsvpForm");
 
